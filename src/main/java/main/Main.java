@@ -3,12 +3,20 @@ package main;
 
 import config.RoadMapConfig;
 import crossway.CrosswayRoadImpl;
+import inputer.InputConsole;
 
 public class Main {
 
     public static void main(String[]args){
         try {
-            CrosswayRoadImpl road = new CrosswayRoadImpl(new RoadMapConfig());
+            RoadMapConfig config = new RoadMapConfig();
+            InputConsole inputConsole = new InputConsole(config);
+
+            inputConsole.requestRoads();
+            inputConsole.requestCars();
+            inputConsole.requestMainNumberCar();
+
+            CrosswayRoadImpl road = new CrosswayRoadImpl(config);
             road.init();
             road.run();
         } catch (Exception e){

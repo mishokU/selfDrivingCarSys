@@ -1,5 +1,5 @@
 package main;
 
 public enum CrosswayStatus {
-    INIT, RUNNING, STOPPED, FINISHED
+    RUNNING, STOPPED, FINISHED, VIOLATION, CRASH
 }

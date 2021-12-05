@@ -5,6 +5,7 @@ import car.Position;
 import config.RoadMapConfig;
 import lombok.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import position.Coordinates;
 
 public class RoadController {
 
@@ -39,10 +40,74 @@ public class RoadController {
         return false;
     }
 
+    public boolean needPassCarsFromDiffRoadsAfterLight(Car car) {
+        boolean needPassCars = false;
+        for(Car _car : config.getAllCars()){
+            if(
+                    isCoordinatesEqual(_car.getCoordinates(), car.nextStep()) && _car.getIndex() != car.getIndex() ||
+                            isCoordinatesEqual(_car.nextStep(), car.nextStep()) && _car.getIndex() != car.getIndex()
+            ){
+                if(car.index == 12){
+                    System.out.println(false);
+                }
+                // On the same road
+                needPassCars = true;
+//                if(_car.moveFrom == car.moveFrom){
+//                    if(!needPassCarsFromDiffRoadsAfterLight(_car)){
+//                        needPassCars = false;
+//                    }
+//                }
+                break;
+            }
+        }
+        return needPassCars;
+    }
+
+    public boolean needPassCarsFromDiffRoads(Car car) {
+        boolean needPassCars = false;
+        for(Car _car : config.getAllCars()){
+            if(isCoordinatesEqual(_car.getCoordinates(), car.nextStep()) && _car.getIndex() != car.getIndex()){
+
+                needPassCars = true;
+                break;
+            }
+        }
+        return needPassCars;
+    }
+
+    private boolean checkPositions(Car _car, Car car) {
+        Position position = Position.LEFT;
+        switch (car.moveFrom){
+            case DOWN: position = Position.LEFT;
+            case RIGHT: position = Position.DOWN;
+            case UP: position = Position.RIGHT;
+            case LEFT: position = Position.UP;
+        }
+        return _car.moveFrom == position;
+    }
+
+    private Boolean getGiveUpRoad(Car car, Position moveFrom) {
+        Position position = Position.LEFT;
+        switch (moveFrom){
+            case DOWN: position = Position.LEFT;
+            case RIGHT: position = Position.UP;
+            case UP: position = Position.RIGHT;
+            case LEFT: position = Position.DOWN;
+        }
+        return car.moveFrom == position;
+    }
+
+    private boolean isCoordinatesEqual(Coordinates toCar, Coordinates fromCar){
+        return toCar.getPoint().getX().equals(fromCar.getPoint().getX()) && toCar.getPoint().getY().equals(fromCar.getPoint().getY());
+    }
+
     public boolean needPassCar(Car car) {
         boolean needPassCars = false;
         for(Car _car : config.getAllCars()){
-            if(_car.getCoordinates() == car.nextStep()){
+            if(
+                    _car.getCoordinates() == car.nextStep() && _car.getIndex() != car.getIndex() ||
+                    _car.nextStep() == car.nextStep() && _car.getIndex() != car.getIndex()
+            ){
                 needPassCars = true;
                 break;
             }
@@ -82,6 +147,17 @@ public class RoadController {
         return needPass;
     }
 
+    public boolean isCrash(Car car) {
+        boolean isCrash = false;
+        for(Car _car : config.getAllCars()){
+            if(_car.getCoordinates() == car.getCoordinates() && _car.getIndex() != car.getIndex()){
+                isCrash = true;
+                break;
+            }
+        }
+        return isCrash;
+    }
+
     private boolean predictPositionsOfLeftCars(Car car, int movement) {
         boolean needPass = false;
         if(car.index == 9){
@@ -103,4 +179,5 @@ public class RoadController {
     private void predictPositions() {
 
     }
+
 }

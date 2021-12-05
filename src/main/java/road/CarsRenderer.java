@@ -1,6 +1,7 @@
 package road;
 
 import car.Car;
+import car.Position;
 import lombok.NonNull;
 import traffic_light.Color;
 import traffic_light.TrafficLight;
@@ -20,6 +21,7 @@ public class CarsRenderer {
     }
 
     public void updateCarsPosition(List<Car> cars, @NonNull List<TrafficLight> lights){
+        drawLights(lights);
         updateMatrix(cars, lights);
         for(int i = 0; i < ((startMaxTopCarPosition + 2) * 2); i++){
             for(int j = 0; j < ((startMinBottomCarPosition + 2) * 2); j++){
@@ -35,6 +37,12 @@ public class CarsRenderer {
             System.out.println();
         }
 
+    }
+
+    private void drawLights(List<TrafficLight> lights) {
+        for(int i = 0; i < lights.size() - 1; i++){
+            System.out.println(lights.get(i).getPosition().name() + " :" + lights.get(0).getColor().name());
+        }
     }
 
     private void updateMatrix(List<Car> cars, @NonNull List<TrafficLight> lights) {
@@ -86,22 +94,33 @@ public class CarsRenderer {
 
                 switch (carsMatrix[i][j]) {
                     case "-2 2":
-                        carsUpdatedMatrix[i][j] = getLightColor(lights.get(0).getColor());
+                        carsUpdatedMatrix[i][j] = getLightColor(getLightByPosition(Position.DOWN, lights));
                         break;
                     case " 2 2":
-                        carsUpdatedMatrix[i][j] = getLightColor(lights.get(1).getColor());
+                        carsUpdatedMatrix[i][j] = getLightColor(getLightByPosition(Position.RIGHT, lights));
                         break;
                     case " 2-2":
-                        carsUpdatedMatrix[i][j] = getLightColor(lights.get(2).getColor());
+                        carsUpdatedMatrix[i][j] = getLightColor(getLightByPosition(Position.UP, lights));
                         break;
                     case "-2-2":
-                        carsUpdatedMatrix[i][j] = getLightColor(lights.get(3).getColor());
+                        carsUpdatedMatrix[i][j] = getLightColor(getLightByPosition(Position.LEFT, lights));
                         break;
                 }
-
             }
         }
     }
+
+    private Color getLightByPosition(Position position, List<TrafficLight> lights) {
+        Color color = Color.BAD;
+        for (TrafficLight light : lights) {
+            if (light.getPosition().name().equals(position.name())) {
+                color = light.getColor();
+                break;
+            }
+        }
+        return color;
+    }
+
 
     private String getLightColor(Color lightColor) {
         String color = "";
@@ -115,6 +134,8 @@ public class CarsRenderer {
             case YELLOW:
                 color = " YY ";
                 break;
+            case BAD:
+                color = " EE ";
         }
         return color;
     }

@@ -6,9 +6,10 @@ import car.Position;
 import config.RoadMapConfig;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import position.Coordinates;
 import position.Point;
+import road.handlers.TrafficCrashHandler;
+import road.handlers.TrafficViolationHandler;
 import traffic_light.handlers.TrafficHandlerDown;
 import traffic_light.handlers.TrafficHandlerLeft;
 import traffic_light.handlers.TrafficHandlerRight;
@@ -24,14 +25,24 @@ public class Road implements TrafficHandlerUp, TrafficHandlerRight, TrafficHandl
     private @NonNull RoadMapConfig config;
     private @NonNull Position position;
     private @NonNull RoadController roadController;
+    private @NonNull TrafficViolationHandler trafficViolationHandler;
+    private @NonNull TrafficCrashHandler trafficCrashHandler;
 
-    private boolean canMove = false;
+    private boolean isGreenOrYellowLight = false;
 
-    public Road(RoadMapConfig config, @NonNull Position position, @NonNull RoadController roadController){
-        this.cars = new ArrayList<>(config.getNumberOfCars());
+    public Road(
+            RoadMapConfig config,
+            @NonNull Position position,
+            @NonNull RoadController roadController,
+            @NonNull TrafficViolationHandler trafficViolationHandler,
+            @NonNull TrafficCrashHandler trafficCrashHandler
+    ){
+        this.cars = new ArrayList<>(config.getNumberCars());
         this.config = config;
         this.position = position;
         this.roadController = roadController;
+        this.trafficViolationHandler = trafficViolationHandler;
+        this.trafficCrashHandler = trafficCrashHandler;
     }
 
     @SneakyThrows
@@ -56,9 +67,11 @@ public class Road implements TrafficHandlerUp, TrafficHandlerRight, TrafficHandl
     }
 
     public void moveAllCars() {
-        if(canMove){
+        if(isGreenOrYellowLight){
             for(Car car : cars){
-                car.moveForward(car.getCoordinates());
+                if(!needPassCarFromDiffRoads(car)){
+                    car.moveForward(car.getCoordinates());
+                }
             }
         } else if (moveTenPercent()){
             moveOnRedLight();
@@ -67,9 +80,23 @@ public class Road implements TrafficHandlerUp, TrafficHandlerRight, TrafficHandl
         }
     }
 
+    private boolean needPassCarFromDiffRoads(Car car) {
+        return roadController.needPassCarsFromDiffRoads(car);
+    }
+
     private void moveOnRedLight() {
         for(Car car : cars){
             car.moveForwardAfterCrossRoad();
+            if(car.isMain){
+                if(car.crosseLight()){
+                    if(roadController.isCrash(car)){
+                        trafficCrashHandler.crash();
+                    } else {
+                        trafficViolationHandler.violation();
+                    }
+                }
+                break;
+            }
         }
     }
 
@@ -79,48 +106,15 @@ public class Road implements TrafficHandlerUp, TrafficHandlerRight, TrafficHandl
     }
 
     private boolean needPassCar(Car car) {
-        return roadController.needPassCar(car);
-    }
-
-    private @Nullable Car getCar(int index) {
-        if(cars.isEmpty() || index < 0){
-            return null;
-        } else {
-            return cars.get(index);
-        }
+        return roadController.needPassCarsFromDiffRoadsAfterLight(car);
     }
 
     private void moveForwardAfterLight() {
         for(Car car : cars){
             if(car.isAfterLight){
-                car.moveForwardAfterCrossRoad();
-            }
-        }
-    }
-
-    private boolean needPassCarByCar(List<Car> cars) {
-        List<Boolean> locks = new ArrayList<>();
-        for(int i = 0; i < cars.size() - 1; i++){
-            locks.add(roadController.needPassCars(position, cars.get(i)));
-        }
-        boolean needPass = false;
-        for(int i = 0; i < locks.size() - 1; i++){
-            if(locks.get(i)){
-                needPass = true;
-                break;
-            }
-        }
-        return needPass;
-    }
-
-    private boolean needPassCars(@Nullable Car car) {
-        return roadController.needPassCars(position, car);
-    }
-
-    private void moveForwardAfterCrossRoad() {
-        for(Car car : cars){
-            if(car.isAfterLight){
-                car.moveForwardAfterCrossRoad();
+                if(!needPassCar(car)){
+                    car.moveForwardAfterCrossRoad();
+                }
             }
         }
     }
@@ -153,28 +147,28 @@ public class Road implements TrafficHandlerUp, TrafficHandlerRight, TrafficHandl
     @Override
     public void canMoveCarsDown(boolean positions) {
         if(position == Position.DOWN){
-            canMove = positions;
+            isGreenOrYellowLight = positions;
         }
     }
 
     @Override
     public void canMoveCarsLeft(boolean positions) {
         if(position == Position.LEFT){
-            canMove = positions;
+            isGreenOrYellowLight = positions;
         }
     }
 
     @Override
     public void canMoveCarsRight(boolean positions) {
         if(position == Position.RIGHT){
-            canMove = positions;
+            isGreenOrYellowLight = positions;
         }
     }
 
     @Override
     public void canMoveCarsUp(boolean positions) {
         if(position == Position.UP){
-            canMove = positions;
+            isGreenOrYellowLight = positions;
         }
     }
 }

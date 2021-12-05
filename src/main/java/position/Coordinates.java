@@ -9,6 +9,8 @@ public class Coordinates {
 
     private @Getter @Setter Point point;
 
+    private @Getter Boolean rotate = false;
+
     public Coordinates(@NonNull Point point){
         this.point = point;
     }
@@ -23,7 +25,8 @@ public class Coordinates {
         this.point.y += point.y;
     }
 
-    public boolean isCenter() {
-        return getPoint().getY() == 0 || getPoint().getX() == 0;
+    public boolean shouldRotate(int x, int y) {
+        if(getPoint().getY() == y && getPoint().getX() == x){ rotate = true; }
+        return rotate;
     }
 }

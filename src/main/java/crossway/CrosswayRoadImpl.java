@@ -1,7 +1,6 @@
 package crossway;
 
 import car.Car;
-import car.Position;
 import config.RoadMapConfig;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -10,13 +9,14 @@ import main.MainLoop;
 import road.CarsRenderer;
 import road.Road;
 import road.RoadController;
+import road.handlers.TrafficCrashHandler;
+import road.handlers.TrafficViolationHandler;
 import traffic_light.TrafficLight;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
+public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad, TrafficViolationHandler, TrafficCrashHandler {
 
     private @NonNull List<Road> roads;
     private @NonNull List<TrafficLight> lights;
@@ -25,13 +25,6 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
 
     private Integer currentProgramTime = 0;
     private final Integer programTick = 2000;
-
-    private final List<Position> positions = Arrays.asList(
-            Position.DOWN,
-            Position.LEFT,
-            Position.UP,
-            Position.RIGHT
-    );
 
     public CrosswayRoadImpl(RoadMapConfig config) {
         super(config);
@@ -50,7 +43,7 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
 
     private void initLights() {
         for(int i = 0; i < config.getNumberOfLights(); i++){
-            TrafficLight light = new TrafficLight(config, roads.get(i), positions.get(i));
+            TrafficLight light = new TrafficLight(config, roads.get(i), config.createPositions().get(i));
             light.init();
             lights.add(light);
         }
@@ -58,7 +51,7 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
 
     private void initRoads() {
         for(int i = 0; i < config.getNumberOfRoads(); i++){
-            Road road = new Road(config, positions.get(i), roadController);
+            Road road = new Road(config, config.createPositions().get(i), roadController, this, this);
             road.initCars();
             roads.add(road);
         }
@@ -67,6 +60,7 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
     @SneakyThrows
     @Override
     protected void processMainLoop() {
+
         while (isRoadRunning() && hasActiveCars()) {
 
             update();
@@ -75,12 +69,7 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
 
             findMainCar();
 
-
             currentProgramTime += programTick;
-
-            if(currentProgramTime > 20000){
-                updateStatus(CrosswayStatus.STOPPED);
-            }
         }
     }
 
@@ -88,12 +77,6 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
     public void render() {
         Integer activeCars = getActiveCarsFromAllRoads();
         System.out.println("Current time: " + currentProgramTime);
-        System.out.println("Lights state: " +
-                "UP: " + lights.get(0).getColor().name() +
-                " RIGHT: " + lights.get(1).getColor().name() +
-                " LEFT: " + lights.get(2).getColor().name() +
-                " DOWN: " + lights.get(3).getColor().name()
-        );
         System.out.println("Cars that crosse the road: " + activeCars);
         carsRenderer.updateCarsPosition(getAllCars(), lights);
     }
@@ -129,6 +112,7 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
             if(road.hasMainCar()) {
                 if(road.getMainCar() != null){
                     if(!road.getMainCar().isActive){
+                        System.out.println("FINISH SUCCESSFUL");
                         updateStatus(CrosswayStatus.FINISHED);
                     }
                 }
@@ -145,4 +129,15 @@ public class CrosswayRoadImpl extends MainLoop implements CrosswayRoad {
         }
     }
 
+    @Override
+    public void violation() {
+        updateStatus(CrosswayStatus.VIOLATION);
+        System.out.println("Traffic  violation");
+    }
+
+    @Override
+    public void crash() {
+        updateStatus(CrosswayStatus.CRASH);
+        System.out.println("Traffic  crash");
+    }
 }

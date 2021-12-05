@@ -1,7 +1,5 @@
 package main;
 
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
 import config.RoadMapConfig;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import road.RoadController;
@@ -9,8 +7,6 @@ import road.RoadController;
 public abstract class MainLoop {
 
     public RoadMapConfig config;
-
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected volatile CrosswayStatus status = CrosswayStatus.STOPPED;
 

@@ -46,30 +46,33 @@ public class Car {
     }
 
     public void moveForward(Coordinates coordinates) {
+        if(index == 1){
+            System.out.println(index);
+        }
         switch (moveFrom){
             case LEFT:
-                if(coordinates.isCenter()){
+                if(coordinates.shouldRotate(1,-1)){
                     moveToCoordinates(coordinates);
                 } else {
                     coordinates.plus(new Point(1,0));
                 }
                 break;
             case UP:
-                if(coordinates.isCenter()){
+                if(coordinates.shouldRotate(-1,-1)){
                     moveToCoordinates(coordinates);
                 } else {
                     coordinates.plus(new Point(0,1));
                 }
                 break;
             case DOWN:
-                if(coordinates.isCenter()){
+                if(coordinates.shouldRotate(1,1)){
                     moveToCoordinates(coordinates);
                 } else {
                     this.coordinates.plus(new Point(0,-1));
                 }
                 break;
             case RIGHT:
-                if(coordinates.isCenter()){
+                if(coordinates.shouldRotate(-1,1)){
                     moveToCoordinates(coordinates);
                 } else {
                     coordinates.plus(new Point(-1,0));
@@ -135,21 +138,21 @@ public class Car {
     }
 
     public Boolean crosseLight() {
-        boolean isCrossRoad = false;
+        boolean isCrossLight = false;
         switch (moveFrom){
             case UP:
-                isCrossRoad = coordinates.getPoint().getY() >= -1;
+                isCrossLight = coordinates.getPoint().getY() <= -1;
                 break;
             case DOWN:
-                isCrossRoad = coordinates.getPoint().getY() <= 1;
+                isCrossLight = coordinates.getPoint().getY() >= 1;
                 break;
             case RIGHT:
-                isCrossRoad = coordinates.getPoint().getX() >= 0;
+                isCrossLight = coordinates.getPoint().getX() <= 1;
             case LEFT:
-                isCrossRoad = coordinates.getPoint().getX() >= -1;
+                isCrossLight = coordinates.getPoint().getX() >= -1;
                 break;
         }
-        return isCrossRoad;
+        return isCrossLight;
     }
 
     public Boolean crosseRoad() {
@@ -162,18 +165,32 @@ public class Car {
                 isCrossRoad = coordinates.getPoint().getY() <= -2;
                 break;
             case RIGHT:
-                isCrossRoad = coordinates.getPoint().getX() >= 2;
-            case LEFT:
                 isCrossRoad = coordinates.getPoint().getX() <= -2;
+            case LEFT:
+                isCrossRoad = coordinates.getPoint().getX() >= 2;
                 break;
         }
         return isCrossRoad;
     }
 
     public Coordinates nextStep() {
-        Coordinates coordinates = new Coordinates(new Point(0,0));
-        coordinates.setPoint(this.coordinates.getPoint());
-        moveForward(coordinates);
-        return coordinates;
+        Coordinates coordinatesTmp;
+        switch (moveTo){
+            case LEFT:
+                coordinatesTmp =  new Coordinates(new Point(coordinates.getPoint().getX() + 1, coordinates.getPoint().getY()));
+                break;
+            case UP:
+                coordinatesTmp = new Coordinates(new Point(coordinates.getPoint().getX(), coordinates.getPoint().getY() + 1));
+                break;
+            case DOWN:
+                coordinatesTmp = new Coordinates(new Point(coordinates.getPoint().getX(), coordinates.getPoint().getY() - 1));
+                break;
+            case RIGHT:
+                coordinatesTmp =  new Coordinates(new Point(coordinates.getPoint().getX() - 1, coordinates.getPoint().getY()));
+                break;
+            default:
+                coordinatesTmp = new Coordinates(new Point(coordinates.getPoint().getX() - 1, coordinates.getPoint().getY()));
+        }
+        return coordinatesTmp;
     }
 }
